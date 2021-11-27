@@ -1,0 +1,855 @@
+variables
+{
+	global:
+		0: Spawn_Locations
+		1: Spawn_Facing
+		2: Level_Counter
+		3: Enemy_Spawn_Locations_1
+		4: Enemy_Spawn_Locations_2
+		5: Enemy_Spawn_Locations_3
+		6: Enemy_Spawn_Locations_4
+		7: Enemy_Spawn_Locations_5
+		10: Current_deaths
+		15: Player_Entity
+		19: Players_to_kill
+		20: Completed
+		21: Help_Wanted
+		24: Current_Advice_Text_ID
+		25: Enemy_Array
+
+	player:
+		25: Last_Location
+}
+
+subroutines
+{
+	0: Level_1
+	1: Level_2
+	2: Level_3
+	3: Level_4
+	4: Level_5
+}
+
+disabled rule("Setting bomb locations - Dev Tool - Disable on release")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Button(Interact)) == True;
+	}
+
+	actions
+	{
+		Modify Global Variable(Spawn_Locations, Append To Array, Position Of(Event Player));
+		Modify Global Variable(Spawn_Facing, Append To Array, Facing Direction Of(Event Player));
+	}
+}
+
+disabled rule("Setting Aim Guides - Disable on release")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Button(Primary Fire)) == True;
+	}
+
+	actions
+	{
+		Global.X = Ray Cast Hit Position(Eye Position(Event Player), Eye Position(Event Player) + Facing Direction Of(Event Player) * 100,
+			All Players(All Teams), Event Player, True);
+	}
+}
+
+disabled rule("Creating sphere dev tool")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Global.X != 0;
+	}
+
+	actions
+	{
+		Create Effect(All Players(Team 1), Sphere, Color(Green), Global.X, 0.300, Visible To Position and Radius);
+	}
+}
+
+rule("World Text - Intro")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Create In-World Text(Filtered Array(All Players(All Teams), Global.Help_Wanted && Global.Level_Counter == 0), Custom String(
+			"Welcome to D.Va bomb training by GinjaNinJoe#2608!\r\n"), Vector(27.830, 13.570, -92.080), 1, Do Not Clip,
+			Visible To Position and String, Color(White), Default Visibility);
+		Create In-World Text(Filtered Array(All Players(All Teams), Global.Help_Wanted && Global.Level_Counter == 0), Custom String(
+			"Your visual aiming guides are the green orbs.\r\nWhere to stand is represented by the green ring\r\n"), Vector(27.830, 13.170,
+			-92.080), 1, Do Not Clip, Visible To Position and String, Color(Lime Green), Default Visibility);
+		Create In-World Text(Filtered Array(All Players(All Teams), Global.Help_Wanted && Global.Level_Counter == 0), Custom String(
+			"Feel free to scout out the enemy to get a sense of where the bomb will land and the area it covers.\n"), Vector(27.830,
+			12.770, -92.080), 1, Do Not Clip, Visible To Position and String, Color(Turquoise), Default Visibility);
+		Create In-World Text(Filtered Array(All Players(All Teams), Global.Help_Wanted && Global.Level_Counter == 0), Custom String(
+			"Most of these spots rely on you firing off the ult as soon as you boost so keep that in mind.\r\nhave fun!!\n"), Vector(
+			27.830, 12.370, -92.080), 1, Do Not Clip, Visible To Position and String, Color(Violet), Default Visibility);
+	}
+}
+
+rule("Setting Variables - Player Spawns")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.Spawn_Locations = Array();
+		Global.Spawn_Facing = Array();
+		"First Position"
+		Modify Global Variable(Spawn_Locations, Append To Array, Vector(27.558, 11.738, -97.997));
+		Modify Global Variable(Spawn_Facing, Append To Array, Vector(0.100, 0.140, 0.990));
+		"Second Position"
+		Modify Global Variable(Spawn_Locations, Append To Array, Vector(5.670, 12, -86.130));
+		Modify Global Variable(Spawn_Facing, Append To Array, Vector(0.840, 0.240, 0.500));
+		"Third Position"
+		Modify Global Variable(Spawn_Locations, Append To Array, Vector(62.030, 11, -70.250));
+		Modify Global Variable(Spawn_Facing, Append To Array, Vector(-0.690, 0.320, -0.650));
+		"Fourth Position"
+		Modify Global Variable(Spawn_Locations, Append To Array, Vector(-17.600, 9.730, -94.600));
+		Modify Global Variable(Spawn_Facing, Append To Array, Vector(-0.390, 0.360, 0.850));
+		"Fifth Position"
+		Modify Global Variable(Spawn_Locations, Append To Array, Vector(-45.190, 6, -66.170));
+		Modify Global Variable(Spawn_Facing, Append To Array, Vector(0.870, 0.340, 0.350));
+	}
+}
+
+rule("Setting Variables - Enemy Spawns")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.Enemy_Array = Array();
+		Global.Enemy_Spawn_Locations_1 = Array(Vector(21.180, 5.920, -66.220), Vector(42.010, 5.990, -66.220), Vector(36.430, 6, -54.770));
+		Global.Enemy_Spawn_Locations_2 = Array(Vector(21.180, 5.920, -66.220), Vector(42.010, 5.990, -66.220), Vector(36.430, 6, -54.770),
+			Vector(34.260, 12.080, -59.170));
+		Global.Enemy_Spawn_Locations_3 = Array(Vector(45.270, 9.010, -73.180), Vector(39.370, 10, -90.070), Vector(27.770, 10, -87.510),
+			Vector(55.400, 6, -90.130));
+		Global.Enemy_Spawn_Locations_4 = Array(Vector(-23.840, 6.030, -60.600), Vector(-23.800, 12, -60.220), Vector(-40.460, 6, -67.340),
+			Vector(-33.240, 5.850, -73.210));
+		Global.Enemy_Spawn_Locations_5 = Array(Vector(-24.130, 12, -58.190), Vector(-23.800, 12, -51.240), Vector(-21.890, 12, -55.200),
+			Vector(-21.800, 12, -46.680));
+	}
+}
+
+rule("Setting Variables - Level Guides | Spheres and Positioning Rings")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Global.Level_Counter = 0;
+		Global.Help_Wanted = True;
+		Global.Completed = False;
+		"Level 1 sphere"
+		Create Effect(Filtered Array(All Players(Team 1), Global.Level_Counter == 0 && Global.Help_Wanted), Sphere, Color(Green), Vector(
+			31.470, 16.780, -59.820), 1, Visible To);
+		"Level 2 sphere"
+		Create Effect(Filtered Array(All Players(Team 1), Global.Level_Counter == 1 && Global.Help_Wanted), Sphere, Color(Green), Vector(
+			36.830, 21.120, -67.540), 1, Visible To);
+		"Level 3 sphere"
+		Create Effect(Filtered Array(All Players(Team 1), Global.Level_Counter == 2 && Global.Help_Wanted), Sphere, Color(Green), Vector(
+			61.290, 13.160, -70.950), 0.300, Visible To);
+		"Level 4 sphere"
+		Create Effect(Filtered Array(All Players(Team 1), Global.Level_Counter == 3 && Global.Help_Wanted), Sphere, Color(Green), Vector(
+			-18.500, 11.760, -93.860), 0.300, Visible To);
+		"Level 5 sphere"
+		Create Effect(Filtered Array(All Players(Team 1), Global.Level_Counter == 4 && Global.Help_Wanted), Sphere, Color(Green), Vector(
+			-43.850, 8.270, -65.590), 0.100, Visible To);
+		"Positioning Rings - 1"
+		Create Effect(Filtered Array(All Players(All Teams), Global.Level_Counter == 0 && Global.Help_Wanted), Ring, Color(Green),
+			Global.Spawn_Locations[0], 1, Visible To Position and Radius);
+		"Positioning Rings - 2"
+		Create Effect(Filtered Array(All Players(All Teams), Global.Level_Counter == 1 && Global.Help_Wanted), Ring, Color(Green),
+			Global.Spawn_Locations[1], 1, Visible To Position and Radius);
+		"Positioning Rings - 3"
+		Create Effect(Filtered Array(All Players(All Teams), Global.Level_Counter == 2 && Global.Help_Wanted), Ring, Color(Green),
+			Global.Spawn_Locations[2], 1, Visible To Position and Radius);
+		"Positioning Rings - 4"
+		Create Effect(Filtered Array(All Players(All Teams), Global.Level_Counter == 3 && Global.Help_Wanted), Ring, Color(Green),
+			Global.Spawn_Locations[3], 1, Visible To Position and Radius);
+		"Positioning Rings - 5"
+		Create Effect(Filtered Array(All Players(All Teams), Global.Level_Counter == 4 && Global.Help_Wanted), Ring, Color(Green),
+			Global.Spawn_Locations[4], 1, Visible To Position and Radius);
+	}
+}
+
+rule("Spawning Player at a set location.")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Has Spawned(Event Player) == True;
+	}
+
+	actions
+	{
+		Global.Player_Entity = Event Player;
+		Log To Inspector(Custom String("position vector: {0}", Global.Spawn_Locations[0]));
+		Event Player.Last_Location = 0;
+		Call Subroutine(Level_1);
+	}
+}
+
+rule("Spawning enemies")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		"Creating Hero 1"
+		Create Dummy Bot(Hero(Widowmaker), Team 2, -1, Global.Enemy_Spawn_Locations_1[0], Vector(0, 0, 0));
+		Last Created Entity.Last_Location = Global.Enemy_Spawn_Locations_1[0];
+		Modify Global Variable(Enemy_Array, Append To Array, Last Created Entity);
+		"Creating Hero 2"
+		Create Dummy Bot(Hero(Symmetra), Team 2, -1, Global.Enemy_Spawn_Locations_1[1], Vector(0, 0, 0));
+		Last Created Entity.Last_Location = Global.Enemy_Spawn_Locations_1[1];
+		Modify Global Variable(Enemy_Array, Append To Array, Last Created Entity);
+		"Creating Hero 3"
+		Create Dummy Bot(Hero(Baptiste), Team 2, -1, Global.Enemy_Spawn_Locations_1[2], Vector(0, 0, 0));
+		Last Created Entity.Last_Location = Global.Enemy_Spawn_Locations_1[2];
+		Modify Global Variable(Enemy_Array, Append To Array, Last Created Entity);
+		"Creating Hero 4"
+		Create Dummy Bot(Hero(Echo), Team 2, -1, Global.Enemy_Spawn_Locations_5[3], Vector(0, 0, 0));
+		Modify Global Variable(Enemy_Array, Append To Array, Last Created Entity);
+	}
+}
+
+rule("EnemyResetOnDeath")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		All;
+	}
+
+	conditions
+	{
+		Is Dead(Event Player) == True;
+	}
+
+	actions
+	{
+		Respawn(Event Player);
+		Teleport(Event Player, Event Player.Last_Location);
+	}
+}
+
+rule("OnDeathScoreUp 0 --> 1")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		All;
+	}
+
+	conditions
+	{
+		Is Dead(Event Player) == True;
+		Global.Level_Counter == 0;
+	}
+
+	actions
+	{
+		Global.Current_deaths += 1;
+		If(Global.Current_deaths == 3);
+			Call Subroutine(Level_2);
+	}
+}
+
+rule("OnDeathScoreUp 1 --> 2")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		All;
+	}
+
+	conditions
+	{
+		Is Dead(Event Player) == True;
+		Global.Level_Counter == 1;
+	}
+
+	actions
+	{
+		Global.Current_deaths += 1;
+		If(Global.Current_deaths == 4);
+			Call Subroutine(Level_3);
+	}
+}
+
+rule("OnDeathScoreUp 2 --> 3")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		All;
+	}
+
+	conditions
+	{
+		Is Dead(Event Player) == True;
+		Global.Level_Counter == 2;
+	}
+
+	actions
+	{
+		Global.Current_deaths += 1;
+		If(Global.Current_deaths == 4);
+			Call Subroutine(Level_4);
+	}
+}
+
+rule("OnDeathScoreUp 3 --> 4")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		All;
+	}
+
+	conditions
+	{
+		Is Dead(Event Player) == True;
+		Global.Level_Counter == 3;
+	}
+
+	actions
+	{
+		Global.Current_deaths += 1;
+		If(Global.Current_deaths == 4);
+			Call Subroutine(Level_5);
+	}
+}
+
+rule("OnDeathScoreUp 4 --> END")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		All;
+	}
+
+	conditions
+	{
+		Global.Level_Counter == 4;
+		Is Dead(Event Player) == True;
+	}
+
+	actions
+	{
+		Global.Current_deaths += 1;
+		If(Global.Current_deaths == 4);
+			Global.Completed = True;
+	}
+}
+
+rule("OnUltScoreReset")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Button(Ultimate)) == True;
+	}
+
+	actions
+	{
+		Global.Current_deaths = 0;
+	}
+}
+
+rule("EnemyOnDamageReset")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 2;
+		All;
+	}
+
+	conditions
+	{
+		Health(Event Player) != Max Health(Event Player);
+	}
+
+	actions
+	{
+		Wait(0.500, Ignore Condition);
+		Respawn(Event Player);
+		Teleport(Event Player, Event Player.Last_Location);
+	}
+}
+
+rule("HUD Number of Enemies")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Create HUD Text(Filtered Array(All Players(Team 1), Global.Help_Wanted), Custom String("Players to kill = {0}",
+			Global.Players_to_kill), Null, Null, Right, 3, Color(Red), Color(White), Color(White), Visible To and String,
+			Default Visibility);
+	}
+}
+
+rule("HUD Helper Text - Level 1")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global.Level_Counter == 0;
+	}
+
+	actions
+	{
+		Destroy HUD Text(Global.Current_Advice_Text_ID);
+		Create HUD Text(Filtered Array(All Players(All Teams), Global.Help_Wanted), Custom String("Level 1 - Advice"), Null, Custom String(
+			"Aim for top left of arch, Between the Hanging lamp and the Bronze Brewery tank."), Top, 0, Color(White), Color(White), Color(
+			White), Visible To and String, Default Visibility);
+		Global.Current_Advice_Text_ID = Last Text ID;
+	}
+}
+
+rule("HUD Helper Text - Level 2")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global.Level_Counter == 1;
+	}
+
+	actions
+	{
+		Destroy HUD Text(Global.Current_Advice_Text_ID);
+		Create HUD Text(Filtered Array(All Players(All Teams), Global.Help_Wanted), Custom String("Level 2 - Advice"), Null, Custom String(
+			"Try to aim at the top left of the frame. This should line up with a light"), Top, 0, Color(White), Color(White), Color(White),
+			Visible To and String, Default Visibility);
+		Global.Current_Advice_Text_ID = Last Text ID;
+	}
+}
+
+rule("HUD Helper Text - Level 3")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global.Level_Counter == 2;
+	}
+
+	actions
+	{
+		Destroy HUD Text(Global.Current_Advice_Text_ID);
+		Create HUD Text(Filtered Array(All Players(All Teams), Global.Help_Wanted), Custom String("Level 3 - Advice"), Null, Custom String(
+			"You need to slide the bomb along the wall before it leaves the window. Try angling upwards. You are aiming for the crates."),
+			Top, 0, Color(White), Color(White), Color(White), Visible To and String, Default Visibility);
+		Global.Current_Advice_Text_ID = Last Text ID;
+	}
+}
+
+rule("HUD Helper Text - Level 4")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global.Level_Counter == 3;
+	}
+
+	actions
+	{
+		Destroy HUD Text(Global.Current_Advice_Text_ID);
+		Create HUD Text(Filtered Array(All Players(All Teams), Global.Help_Wanted), Custom String("Level 4 - Advice"), Null, Custom String(
+			"Try to slide along the wall so it just barely goes over the corner of widow's balcony."), Top, 0, Color(White), Color(White),
+			Color(White), Visible To and String, Default Visibility);
+		Global.Current_Advice_Text_ID = Last Text ID;
+	}
+}
+
+rule("HUD Helper Text - Level 5")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global.Level_Counter == 4;
+	}
+
+	actions
+	{
+		Destroy HUD Text(Global.Current_Advice_Text_ID);
+		Create HUD Text(Filtered Array(All Players(All Teams), Global.Help_Wanted), Custom String("Level 5 - Advice"), Null, Custom String(
+			"Aim for just to the right of the top of the wardrobe where it curves. Very hard angle to get."), Top, 0, Color(White), Color(
+			White), Color(White), Visible To and String, Default Visibility);
+		Global.Current_Advice_Text_ID = Last Text ID;
+	}
+}
+
+rule("HUD - Completed Text")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global.Completed == True;
+	}
+
+	actions
+	{
+		Create HUD Text(All Players(All Teams), Custom String("Congratulations! You've completed the Levels!"), Null, Null, Right, 4,
+			Color(Green), Color(White), Color(White), Visible To and String, Default Visibility);
+	}
+}
+
+rule("HUD - List of Player commands")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Create HUD Text(All Players(All Teams), Null, Null, Custom String("\r\n\r\n\r\n\r\n\r\n\r\n\r\n"), Right, 0, Color(White), Color(
+			White), Color(White), Visible To and String, Default Visibility);
+		Create HUD Text(All Players(All Teams), Custom String(
+			"Go up a lvl: Interact + primary fire\r\nGo down a lvl: Interact + secondary fire\r\nReset position: Reload"), Null, Null,
+			Right, 1, Color(White), Color(White), Color(White), Visible To, Default Visibility);
+		Create HUD Text(All Players(All Teams), Custom String("Toggle Guides: Interact + Crouch"), Null, Null, Right, 2, Color(White),
+			Color(White), Color(White), Visible To and String, Default Visibility);
+	}
+}
+
+rule("Player Command - Reset Current Level (Press Reload)")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Button(Reload)) == True;
+	}
+
+	actions
+	{
+		Teleport(Event Player, Global.Spawn_Locations[Global.Level_Counter]);
+		Set Facing(Global.Player_Entity, Global.Spawn_Facing[Global.Level_Counter], To World);
+	}
+}
+
+rule("Player Command - Level Cycling | Up (Press Interact + Left Click)")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Button(Primary Fire)) == True;
+		Is Button Held(Event Player, Button(Interact)) == True;
+	}
+
+	actions
+	{
+		If(Global.Level_Counter == 0);
+			Call Subroutine(Level_2);
+		Else If(Global.Level_Counter == 1);
+			Call Subroutine(Level_3);
+		Else If(Global.Level_Counter == 2);
+			Call Subroutine(Level_4);
+		Else If(Global.Level_Counter == 3);
+			Call Subroutine(Level_5);
+		Else;
+			Big Message(All Players(All Teams), Custom String("Error: No More levels after this: try going back"));
+	}
+}
+
+rule("Player Command - Level Cycling | Down (Press Interact + Right Click)")
+{
+	event
+	{
+		Ongoing - Each Player;
+		Team 1;
+		All;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Button(Secondary Fire)) == True;
+		Is Button Held(Event Player, Button(Interact)) == True;
+	}
+
+	actions
+	{
+		If(Global.Level_Counter == 1);
+			Call Subroutine(Level_1);
+		Else If(Global.Level_Counter == 2);
+			Call Subroutine(Level_2);
+		Else If(Global.Level_Counter == 3);
+			Call Subroutine(Level_3);
+		Else If(Global.Level_Counter == 4);
+			Call Subroutine(Level_4);
+		Else;
+			Big Message(All Players(All Teams), Custom String("Error: There are no levels before this"));
+	}
+}
+
+rule("Player Command - Disable Help (Press Interact + Crouch)")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Button(Interact)) == True;
+		Is Button Held(Event Player, Button(Crouch)) == True;
+	}
+
+	actions
+	{
+		If(Global.Help_Wanted);
+			Global.Help_Wanted = False;
+		Else;
+			Global.Help_Wanted = True;
+	}
+}
+
+rule("Subroutine - Level 1")
+{
+	event
+	{
+		Subroutine;
+		Level_1;
+	}
+
+	actions
+	{
+		"Setting up lvl 1"
+		Global.Level_Counter = 0;
+		Global.Current_deaths = 0;
+		Big Message(All Players(All Teams), Custom String("Level 1"));
+		"Changing Other Hero Locations For Second Bomb Spot"
+		Teleport(Global.Enemy_Array[0], Global.Enemy_Spawn_Locations_1[0]);
+		Teleport(Global.Enemy_Array[1], Global.Enemy_Spawn_Locations_1[1]);
+		Teleport(Global.Enemy_Array[2], Global.Enemy_Spawn_Locations_1[2]);
+		Teleport(Global.Enemy_Array[3], Global.Enemy_Spawn_Locations_5[3]);
+		Global.Enemy_Array[0].Last_Location = Global.Enemy_Spawn_Locations_1[0];
+		Global.Enemy_Array[1].Last_Location = Global.Enemy_Spawn_Locations_1[1];
+		Global.Enemy_Array[2].Last_Location = Global.Enemy_Spawn_Locations_1[2];
+		Global.Enemy_Array[3].Last_Location = Global.Enemy_Spawn_Locations_1[3];
+		"Setting player parameters"
+		Teleport(Global.Player_Entity, Global.Spawn_Locations[0]);
+		Set Facing(Global.Player_Entity, Global.Spawn_Facing[0], To World);
+		Global.Players_to_kill = 3;
+	}
+}
+
+rule("Subroutine - Level 2")
+{
+	event
+	{
+		Subroutine;
+		Level_2;
+	}
+
+	actions
+	{
+		Global.Current_deaths = 0;
+		"Setting up lvl 2"
+		Global.Level_Counter = 1;
+		Big Message(All Players(All Teams), Custom String("Level 2"));
+		"Changing Other Hero Locations For Second Bomb Spot"
+		Teleport(Global.Enemy_Array[0], Global.Enemy_Spawn_Locations_2[0]);
+		Teleport(Global.Enemy_Array[1], Global.Enemy_Spawn_Locations_2[1]);
+		Teleport(Global.Enemy_Array[2], Global.Enemy_Spawn_Locations_2[2]);
+		Teleport(Global.Enemy_Array[3], Global.Enemy_Spawn_Locations_2[3]);
+		Teleport(All Players(Team 1), Global.Spawn_Locations[1]);
+		Set Facing(All Players(Team 1), Global.Spawn_Facing[1], To World);
+		Global.Enemy_Array[0].Last_Location = Global.Enemy_Spawn_Locations_2[0];
+		Global.Enemy_Array[1].Last_Location = Global.Enemy_Spawn_Locations_2[1];
+		Global.Enemy_Array[2].Last_Location = Global.Enemy_Spawn_Locations_2[2];
+		Global.Enemy_Array[3].Last_Location = Global.Enemy_Spawn_Locations_2[3];
+		Global.Players_to_kill = 4;
+	}
+}
+
+rule("Subroutine - Level 3")
+{
+	event
+	{
+		Subroutine;
+		Level_3;
+	}
+
+	actions
+	{
+		Global.Current_deaths = 0;
+		"Setting up lvl 3"
+		Global.Level_Counter = 2;
+		Big Message(All Players(All Teams), Custom String("Level 3"));
+		"Changing Other Hero Locations For Second Bomb Spot"
+		Teleport(Global.Enemy_Array[0], Global.Enemy_Spawn_Locations_3[0]);
+		Teleport(Global.Enemy_Array[1], Global.Enemy_Spawn_Locations_3[1]);
+		Teleport(Global.Enemy_Array[2], Global.Enemy_Spawn_Locations_3[2]);
+		Teleport(Global.Enemy_Array[3], Global.Enemy_Spawn_Locations_3[3]);
+		Teleport(All Players(Team 1), Global.Spawn_Locations[2]);
+		Set Facing(All Players(Team 1), Global.Spawn_Facing[2], To World);
+		Global.Enemy_Array[0].Last_Location = Global.Enemy_Spawn_Locations_3[0];
+		Global.Enemy_Array[1].Last_Location = Global.Enemy_Spawn_Locations_3[1];
+		Global.Enemy_Array[2].Last_Location = Global.Enemy_Spawn_Locations_3[2];
+		Global.Enemy_Array[3].Last_Location = Global.Enemy_Spawn_Locations_3[3];
+		Global.Players_to_kill = 4;
+	}
+}
+
+rule("Subroutine - Level 4")
+{
+	event
+	{
+		Subroutine;
+		Level_4;
+	}
+
+	actions
+	{
+		"Setting up lvl 4"
+		Global.Level_Counter = 3;
+		Global.Current_deaths = 0;
+		Big Message(All Players(All Teams), Custom String("Level 4"));
+		"Changing Other Hero Locations For Second Bomb Spot"
+		Teleport(Global.Enemy_Array[0], Global.Enemy_Spawn_Locations_4[0]);
+		Teleport(Global.Enemy_Array[1], Global.Enemy_Spawn_Locations_4[1]);
+		Teleport(Global.Enemy_Array[2], Global.Enemy_Spawn_Locations_4[2]);
+		Teleport(Global.Enemy_Array[3], Global.Enemy_Spawn_Locations_4[3]);
+		Teleport(All Players(Team 1), Global.Spawn_Locations[3]);
+		Set Facing(All Players(Team 1), Global.Spawn_Facing[3], To World);
+		Global.Enemy_Array[0].Last_Location = Global.Enemy_Spawn_Locations_4[0];
+		Global.Enemy_Array[1].Last_Location = Global.Enemy_Spawn_Locations_4[1];
+		Global.Enemy_Array[2].Last_Location = Global.Enemy_Spawn_Locations_4[2];
+		Global.Enemy_Array[3].Last_Location = Global.Enemy_Spawn_Locations_4[3];
+		Global.Players_to_kill = 4;
+	}
+}
+
+rule("Subroutine - Level 5")
+{
+	event
+	{
+		Subroutine;
+		Level_5;
+	}
+
+	actions
+	{
+		"Setting up lvl 5"
+		Global.Level_Counter = 4;
+		Global.Current_deaths = 0;
+		Big Message(All Players(All Teams), Custom String("Level 5"));
+		"Changing Other Hero Locations For Second Bomb Spot"
+		Teleport(Global.Enemy_Array[0], Global.Enemy_Spawn_Locations_5[0]);
+		Teleport(Global.Enemy_Array[1], Global.Enemy_Spawn_Locations_5[1]);
+		Teleport(Global.Enemy_Array[2], Global.Enemy_Spawn_Locations_5[2]);
+		Teleport(Global.Enemy_Array[3], Global.Enemy_Spawn_Locations_5[3]);
+		Teleport(All Players(Team 1), Global.Spawn_Locations[4]);
+		Set Facing(All Players(Team 1), Global.Spawn_Facing[4], To World);
+		Global.Enemy_Array[0].Last_Location = Global.Enemy_Spawn_Locations_5[0];
+		Global.Enemy_Array[1].Last_Location = Global.Enemy_Spawn_Locations_5[1];
+		Global.Enemy_Array[2].Last_Location = Global.Enemy_Spawn_Locations_5[2];
+		Global.Enemy_Array[3].Last_Location = Global.Enemy_Spawn_Locations_5[3];
+		Global.Players_to_kill = 4;
+	}
+}
